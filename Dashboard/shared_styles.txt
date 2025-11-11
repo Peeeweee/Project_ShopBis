@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+.stApp {
+    background: #F8F9FA;
+}
+
+/* Remove default Streamlit padding */
+.main .block-container {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Hide Sidebar */
+[data-testid="stSidebar"] {
+    display: none;
+}
+button[kind="header"] {
+    display: none;
+}
+
+/* Remove top padding from app */
+section[data-testid="stAppViewContainer"] > .main {
+    padding-top: 0 !important;
+}
+
+/* Enhanced Professional Navigation Bar */
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #1a252f 0%, #2C3E50 100%);
+    padding: 1rem 3rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #FA812F;
+}
+.top-nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+.top-nav-logo:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+.top-nav-logo h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #FAB12F 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.top-nav-logo .emoji {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(250, 129, 47, 0.3));
+}
+.top-nav-links {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+}
+.nav-link {
+    color: #CBD5E0;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: transparent;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+.nav-link:hover::before {
+    left: 100%;
+}
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.nav-link.active {
+    background: linear-gradient(135deg, #FA812F 0%, #DD0303 100%);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(250, 129, 47, 0.4);
+    border-color: #FAB12F;
+}
+.nav-link.active:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(250, 129, 47, 0.5);
+}
+.nav-link span {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Professional Metric Cards */
+.stMetric {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid #E9ECEF;
+    transition: all 0.3s ease;
+}
+.stMetric:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.stMetric label {
+    color: #6C757D !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+}
+.stMetric [data-testid="stMetricValue"] {
+    color: #FA812F !important;
+    font-weight: 700 !important;
+}
+
+/* Professional Buttons */
+.stButton button, .stDownloadButton button {
+    background: #FA812F !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 0.5rem !important;
+    padding: 0.65rem 1.5rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+.stButton button:hover, .stDownloadButton button:hover {
+    background: #DD0303 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #2C3E50 !important;
+}
+
+p, div, span {
+    color: #495057;
+}
+
+/* Professional Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+    background: transparent;
+}
+.stTabs [data-baseweb="tab"] {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 1px solid #E9ECEF;
+    color: #6C757D;
+    font-weight: 500;
+}
+.stTabs [aria-selected="true"] {
+    background: #FA812F;
+    color: white !important;
+    border-color: #FA812F;
+}

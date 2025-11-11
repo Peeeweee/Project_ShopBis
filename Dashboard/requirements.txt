@@ -1,0 +1,22 @@
+# ShopBis Dashboard Requirements
+# ================================
+# Auto-installed by RUN_ME.bat
+
+# Core Framework
+streamlit>=1.28.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+plotly>=5.17.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Machine Learning
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Additional utilities
+Pillow>=10.0.0
