@@ -30,6 +30,7 @@ st.markdown("""
     /* Hide Streamlit Branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    header {visibility: hidden;}
 
     /* Professional Cool-Toned Background */
     .stApp {
@@ -451,6 +452,88 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# About This Dashboard Section
+st.markdown("""
+<div style="background: linear-gradient(135deg, #FEF3E2 0%, #ffffff 100%); padding: 2.5rem; border-radius: 1rem; border-left: 4px solid #FA812F; margin: 2rem 0 3rem 0; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+    <h2 style="color: #2C3E50; margin-top: 0;">
+        📊 About This Dashboard
+    </h2>
+    <p style="color: #495057; margin: 1rem 0; line-height: 1.8; font-size: 1.05rem;">
+        <strong>ShopBis Analytics Dashboard</strong> is a comprehensive, AI-powered analytics platform designed to transform raw shopping behavior data into actionable business intelligence. Built with modern data science techniques and professional UI/UX design, this dashboard empowers businesses to make data-driven decisions.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# What Can You Do Section
+st.markdown("### 🎯 What Can You Do?")
+col1, col2 = st.columns(2, gap="medium")
+
+with col1:
+    st.markdown("""
+    **🏠 Explore Real-Time Insights**
+    View live metrics, KPIs, and visualizations from 3,900+ customer records including demographics, purchase patterns, and behavioral trends.
+
+    **🔮 Predict Behavior**
+    Leverage our 97.82% accurate Random Forest model to predict if customers will make repeat purchases and identify retention strategies.
+    """)
+
+with col2:
+    st.markdown("""
+    **👥 Segment Customers**
+    Use K-Means clustering to discover natural customer groups, understand their characteristics, and receive AI-powered marketing recommendations.
+
+    **📦 Analyze Products**
+    Deep-dive into product performance, seasonal trends, category analytics, and customer preferences across demographics.
+    """)
+
+# ML Stats Section
+st.markdown("### 🤖 Powered by Machine Learning")
+col1, col2, col3 = st.columns(3, gap="medium")
+
+with col1:
+    st.markdown("""
+    <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 0.75rem; border: 1px solid #E9ECEF;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #FA812F;">Random Forest</div>
+        <p style="color: #6C757D; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Purchase Behavior<br>Prediction Algorithm</p>
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E9ECEF;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #FA812F;">97.82%</div>
+            <p style="color: #6C757D; margin: 0; font-size: 0.85rem;">Accuracy</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 0.75rem; border: 1px solid #E9ECEF;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #FA812F;">K-Means</div>
+        <p style="color: #6C757D; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Customer Segmentation<br>Algorithm</p>
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E9ECEF;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #FA812F;">2-6 Clusters</div>
+            <p style="color: #6C757D; margin: 0; font-size: 0.85rem;">Configurable</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div style="text-align: center; padding: 1.5rem; background: white; border-radius: 0.75rem; border: 1px solid #E9ECEF;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #FA812F;">10+</div>
+        <p style="color: #6C757D; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Interactive<br>Visualizations</p>
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #E9ECEF;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: #FA812F;">4 Pages</div>
+            <p style="color: #6C757D; margin: 0; font-size: 0.85rem;">Analytics Modules</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("""
+<p style="color: #6C757D; margin: 2rem 0 0 0; font-size: 0.95rem; text-align: center;">
+    <em>Navigate through the pages using the top navigation bar to explore different analytics modules</em>
+</p>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
+
 # Load data for overview metrics
 @st.cache_data
 def load_data():
@@ -610,14 +693,14 @@ with col1:
 with col2:
     st.markdown("""
     <div class="feature-card">
-        <h4>🔮 Prediction</h4>
-        <p>Leverage machine learning to predict product categories with high accuracy.</p>
+        <h4>🔮 Purchase Behavior Prediction</h4>
+        <p>Predict if customers will make repeat purchases using AI with 97.82% accuracy.</p>
         <ul>
-            <li>User-friendly single prediction interface</li>
-            <li>Bulk CSV upload for batch predictions</li>
-            <li>Detailed confidence scores & probability distributions</li>
-            <li>Feature importance visualization</li>
-            <li>Model performance metrics dashboard</li>
+            <li>Single customer prediction with confidence scores</li>
+            <li>Batch CSV upload for bulk behavior analysis</li>
+            <li>Actionable business insights & retention strategies</li>
+            <li>Feature importance visualization (10 factors)</li>
+            <li>Random Forest model with 200 decision trees</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
