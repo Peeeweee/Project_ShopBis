@@ -698,39 +698,35 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Machine Learning Section
-st.markdown('<h2 class="section-header">AI-Powered Analytics</h2>', unsafe_allow_html=True)
+st.markdown('<h2 class="section-header">🤖 Model Information</h2>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([2, 1], gap="large")
-
+# Metrics for the model
+col1, col2, col3 = st.columns(3, gap="large")
 with col1:
-    with st.container():
-        st.markdown('<div class="info-box">', unsafe_allow_html=True)
-        st.markdown("**🤖 Random Forest Classifier Model**")
-        st.write("""
-        Our advanced machine learning model predicts product categories with exceptional accuracy
-        by analyzing customer demographics and product features.
-        """)
-        st.markdown("**Model Features:**")
-        st.write("• Item Purchased | Color | Size | Gender")
-        st.write("• Age | Purchase Amount | Review Rating")
-        st.markdown("**Performance:**")
-        st.markdown("""
-        <span class="stat-badge">~99% Accuracy</span>
-        <span class="stat-badge">7 Features</span>
-        <span class="stat-badge">4 Categories</span>
-        """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
+    st.metric("Model Accuracy", "97.82%")
 with col2:
-    with st.container():
-        st.markdown('<div class="glass-card" style="text-align: center;">', unsafe_allow_html=True)
-        st.markdown('<h3 style="color: #2C3E50; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem;">Model Stats</h3>', unsafe_allow_html=True)
-        st.markdown('<div style="font-size: 2.5rem; font-weight: 700; color: #FA812F; text-align: center;">99%</div>', unsafe_allow_html=True)
-        st.markdown('<p style="color: #6C757D; font-size: 0.9rem;">Prediction Accuracy</p>', unsafe_allow_html=True)
-        st.divider()
-        st.markdown('<div style="font-size: 1.8rem; font-weight: 700; color: #FA812F; text-align: center;">200</div>', unsafe_allow_html=True)
-        st.markdown('<p style="color: #6C757D; font-size: 0.9rem;">Decision Trees</p>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.metric("Features Used", "10")
+with col3:
+    st.metric("Decision Trees", "200")
+
+st.markdown("---")
+
+# Top 5 Features
+st.markdown('<h3 style="color: #2C3E50; font-weight: 600; font-size: 1.5rem; margin-bottom: 1rem;">🎯 Top 5 Most Important Features</h3>', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="info-box">
+    <p><strong>Purchase Amount (USD)</strong> - 23.41% importance</p>
+    <p><strong>Age</strong> - 21.69% importance</p>
+    <p><strong>Review Rating</strong> - 16.79% importance</p>
+    <p><strong>Shipping Type</strong> - 10.25% importance</p>
+    <p><strong>Season</strong> - 7.42% importance</p>
+    <br>
+    <p style="font-size: 0.9rem; color: #6C757D;">
+        These features have the strongest influence on predicting repeat purchase behavior.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # Getting Started Section
 st.markdown('<h2 class="section-header">Get Started</h2>', unsafe_allow_html=True)

@@ -1,7 +1,8 @@
 """
-Prediction Page - ShopBis Dashboard
-====================================
-ML-powered category prediction using the trained Random Forest model
+Purchase Behavior Prediction Page - ShopBis Dashboard
+======================================================
+AI-powered prediction: Will this customer buy again?
+Uses Random Forest ML model with 97.82% accuracy
 """
 
 import streamlit as st
@@ -13,7 +14,12 @@ import plotly.graph_objects as go
 from pathlib import Path
 
 # Page config
-st.set_page_config(page_title="Prediction - ShopBis", page_icon="🔮", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Purchase Behavior Prediction - ShopBis",
+    page_icon="🔮",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # Apply professional theme
 professional_css = Path(__file__).parent.parent / "shared_styles.txt"
@@ -33,29 +39,30 @@ st.markdown("""
         margin: 1.5rem 0;
     }
 
-    /* Input Section */
-    .input-section {
-        background: white;
-        border-radius: 1rem;
-        padding: 2rem;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-        border: 1px solid #E9ECEF;
-        margin-bottom: 1.5rem;
-    }
-
-    /* Result Card */
-    .result-card {
-        background: linear-gradient(135deg, #FA812F 0%, #DD0303 100%);
+    /* Result Card - Success (Yes) */
+    .result-card-yes {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         border-radius: 1rem;
         padding: 2rem;
         color: white;
         text-align: center;
-        box-shadow: 0 6px 20px rgba(250, 129, 47, 0.4);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        margin: 2rem 0;
+    }
+
+    /* Result Card - Warning (No) */
+    .result-card-no {
+        background: linear-gradient(135deg, #DD0303 0%, #dc3545 100%);
+        border-radius: 1rem;
+        padding: 2rem;
+        color: white;
+        text-align: center;
+        box-shadow: 0 6px 20px rgba(221, 3, 3, 0.4);
         margin: 2rem 0;
     }
 
     /* Section Header */
-    .section-header-pred {
+    .section-header-custom {
         display: flex;
         align-items: center;
         gap: 1rem;
@@ -64,20 +71,20 @@ st.markdown("""
         border-bottom: 3px solid #FA812F;
     }
 
-    .section-header-pred h2 {
+    .section-header-custom h2 {
         margin: 0;
         color: #2C3E50;
+        font-size: 1.8rem;
         font-weight: 700;
     }
 
-    .section-header-pred .icon {
+    .section-header-custom span {
         font-size: 2rem;
-        filter: drop-shadow(0 2px 4px rgba(250, 129, 47, 0.3));
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Top Navigation Bar
+# Top Navigation
 st.markdown("""
 <div class="top-nav">
     <div class="top-nav-logo">
@@ -105,539 +112,389 @@ st.markdown("""
 st.markdown("""
 <div style="text-align: center; padding: 6.5rem 0 1.5rem 0;">
     <h1 style="font-size: 3rem; font-weight: 800; color: #2C3E50; margin-bottom: 0.5rem; letter-spacing: -1px;">
-        🔮 AI Category Prediction
+        🔮 Purchase Behavior Prediction
     </h1>
     <p style="font-size: 1.1rem; color: #6C757D; max-width: 700px; margin: 0 auto;">
-        Predict product categories using advanced Random Forest machine learning
+        Predict if a customer will make repeat purchases using AI-powered Random Forest model
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# Load data and model
+# Load the model and encoders
 @st.cache_resource
-def load_model_artifacts():
-    model_path = Path(__file__).parent.parent.parent / "Model"
+def load_model():
+    """Load the trained purchase behavior model and encoders"""
     try:
-        model = joblib.load(model_path / "random_forest_model.joblib")
-        label_encoders = joblib.load(model_path / "label_encoders.joblib")
-        le_target = joblib.load(model_path / "le_target.joblib")
-        return model, label_encoders, le_target
+        model_dir = Path(__file__).parent.parent.parent / "Model" / "saved_models"
+
+        model = joblib.load(model_dir / "purchase_behavior_model.joblib")
+        label_encoders = joblib.load(model_dir / "behavior_label_encoders.joblib")
+        target_encoder = joblib.load(model_dir / "behavior_target_encoder.joblib")
+
+        return model, label_encoders, target_encoder
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None, None, None
 
+model, label_encoders, target_encoder = load_model()
+
+if model is None:
+    st.error("⚠️ Model not found! Please train the model first by running: `python Model/purchase_behavior_model.py`")
+    st.stop()
+
+# Load data for reference
 @st.cache_data
 def load_data():
     data_path = Path(__file__).parent.parent.parent / "data" / "shopping_behavior_cleaned.csv"
     return pd.read_csv(data_path)
 
-model, label_encoders, le_target = load_model_artifacts()
 df = load_data()
 
-if model is None:
-    st.error("⚠️ Model not found! Please train the model first by running Model/category_prediction_model.py")
-    st.stop()
-
-st.markdown("---")
-
-# Model Overview
+# Section: Make a Prediction
 st.markdown("""
-<div class="section-header-pred">
-    <span class="icon">🤖</span>
-    <h2>Model Overview</h2>
-</div>
-""", unsafe_allow_html=True)
-
-metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-
-with metric_col1:
-    st.metric(
-        label="🔬 Algorithm",
-        value="Random Forest",
-        delta="Ensemble Method"
-    )
-
-with metric_col2:
-    st.metric(
-        label="🎯 Target",
-        value="Category",
-        delta="4 classes"
-    )
-
-with metric_col3:
-    st.metric(
-        label="📊 Features",
-        value="7",
-        delta="Input variables"
-    )
-
-with metric_col4:
-    st.metric(
-        label="📈 Accuracy",
-        value="99%",
-        delta="High performance"
-    )
-
-st.markdown("---")
-
-# Prediction Interface
-st.markdown("""
-<div class="section-header-pred">
-    <span class="icon">🎯</span>
+<div class="section-header-custom">
+    <span>🎯</span>
     <h2>Make a Prediction</h2>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div style="background: linear-gradient(135deg, #FEF3E2 0%, #ffffff 100%); padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #FA812F; margin-bottom: 2rem;">
-    <p style="margin: 0; color: #2C3E50; font-weight: 500;">
-        Enter customer and product details below to predict the product category. Our AI model will analyze the inputs and provide a confidence score.
+    <p style="color: #495057; margin: 0; line-height: 1.6;">
+        Enter customer and purchase details below to predict the likelihood of repeat purchases.
+        Our AI model analyzes <strong>10 key factors</strong> to provide a confidence score.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# Input Form
-col1, col2 = st.columns(2, gap="large")
+# Create two columns for input
+col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown('<div class="input-section">', unsafe_allow_html=True)
-    st.markdown("#### 👤 Customer Information")
+    st.markdown("""
+    <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); margin-bottom: 1.5rem;">
+        <h3 style="color: #2C3E50; margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <span>👤</span> Customer Information
+        </h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-    gender = st.selectbox(
-        "Gender",
-        options=df["Gender"].unique().tolist(),
-        help="Select customer gender",
-        key="gender_input"
-    )
-
-    age = st.slider(
-        "Age",
-        min_value=int(df["Age"].min()),
-        max_value=int(df["Age"].max()),
-        value=int(df["Age"].mean()),
-        help="Customer age",
-        key="age_input"
-    )
-
-    review_rating = st.slider(
-        "Expected Review Rating",
-        min_value=float(df["Review Rating"].min()),
-        max_value=float(df["Review Rating"].max()),
-        value=float(df["Review Rating"].mean()),
-        step=0.1,
-        help="Predicted product rating",
-        key="rating_input"
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Customer Demographics
+    age = st.slider("Age", min_value=18, max_value=70, value=35, help="Customer's age")
+    gender = st.selectbox("Gender", options=sorted(df['Gender'].unique()), help="Customer's gender")
 
 with col2:
-    st.markdown('<div class="input-section">', unsafe_allow_html=True)
-    st.markdown("#### 📦 Product Information")
+    st.markdown("""
+    <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); margin-bottom: 1.5rem;">
+        <h3 style="color: #2C3E50; margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🛒</span> Purchase Information
+        </h3>
+    </div>
+    """, unsafe_allow_html=True)
 
-    item_purchased = st.selectbox(
-        "Item Name",
-        options=sorted(df["Item Purchased"].unique().tolist()),
-        help="Select product item",
-        key="item_input"
-    )
+    # Purchase Details
+    category = st.selectbox("Product Category", options=sorted(df['Category'].unique()),
+                           help="Type of product purchased")
+    season = st.selectbox("Season", options=sorted(df['Season'].unique()),
+                         help="Season of purchase")
 
-    color = st.selectbox(
-        "Product Color",
-        options=sorted(df["Color"].unique().tolist()),
-        help="Select product color",
-        key="color_input"
-    )
+# Additional Features
+st.markdown("""
+<div style="background: white; padding: 1.5rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); margin-bottom: 1.5rem; margin-top: 1rem;">
+    <h3 style="color: #2C3E50; margin-top: 0; display: flex; align-items: center; gap: 0.5rem;">
+        <span>📊</span> Additional Details
+    </h3>
+</div>
+""", unsafe_allow_html=True)
 
-    size = st.selectbox(
-        "Product Size",
-        options=df["Size"].unique().tolist(),
-        help="Select product size",
-        key="size_input"
-    )
+col3, col4, col5 = st.columns(3)
 
-    purchase_amount = st.number_input(
-        "Purchase Amount (USD)",
-        min_value=int(df["Purchase Amount (USD)"].min()),
-        max_value=int(df["Purchase Amount (USD)"].max()),
-        value=int(df["Purchase Amount (USD)"].mean()),
-        help="Transaction amount",
-        key="amount_input"
-    )
+with col3:
+    review_rating = st.slider("Review Rating", min_value=1.0, max_value=5.0, value=3.5, step=0.1,
+                             help="Customer's review rating (1-5 stars)")
+    size = st.selectbox("Product Size", options=sorted(df['Size'].unique()),
+                       help="Size of the product")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+with col4:
+    shipping_type = st.selectbox("Shipping Type", options=sorted(df['Shipping Type'].unique()),
+                                help="Shipping method chosen")
+    purchase_amount = st.number_input("Purchase Amount (USD)", min_value=20, max_value=100, value=50,
+                                     help="Total purchase amount in USD")
 
-# Prediction Button
+with col5:
+    discount_applied = st.selectbox("Discount Applied", options=['Yes', 'No'],
+                                   help="Was a discount applied?")
+    promo_code = st.selectbox("Promo Code Used", options=['Yes', 'No'],
+                             help="Did customer use a promo code?")
+
+# Predict Button
 st.markdown("<br>", unsafe_allow_html=True)
 
-if st.button("🔮 Generate Prediction", type="primary", use_container_width=True):
+if st.button("🔮 Predict Purchase Behavior", use_container_width=True, type="primary"):
     # Prepare input data
-    input_data = {
-        'Item Purchased': item_purchased,
-        'Color': color,
-        'Size': size,
-        'Gender': gender,
-        'Age': age,
-        'Purchase Amount (USD)': purchase_amount,
-        'Review Rating': review_rating
-    }
-
-    # Create DataFrame
-    input_df = pd.DataFrame([input_data])
+    input_data = pd.DataFrame({
+        'Age': [age],
+        'Gender': [gender],
+        'Category': [category],
+        'Season': [season],
+        'Review Rating': [review_rating],
+        'Size': [size],
+        'Shipping Type': [shipping_type],
+        'Purchase Amount (USD)': [purchase_amount],
+        'Discount Applied': [discount_applied],
+        'Promo Code Used': [promo_code]
+    })
 
     # Encode categorical features
-    try:
-        for feature in ['Item Purchased', 'Color', 'Size', 'Gender']:
-            if feature in label_encoders:
-                le = label_encoders[feature]
-                try:
-                    input_df[feature] = le.transform(input_df[feature])
-                except ValueError:
-                    st.warning(f"⚠️ '{input_data[feature]}' is a new value for {feature}. Using fallback.")
-                    input_df[feature] = le.transform([le.classes_[0]])
+    for col in input_data.select_dtypes(include=['object']).columns:
+        if col in label_encoders:
+            try:
+                input_data[col] = label_encoders[col].transform(input_data[col])
+            except ValueError:
+                st.error(f"⚠️ Unknown value for {col}. Please select a valid option.")
+                st.stop()
 
-        # Make prediction
-        prediction = model.predict(input_df)[0]
-        prediction_proba = model.predict_proba(input_df)[0]
+    # Make prediction
+    prediction = model.predict(input_data)[0]
+    prediction_proba = model.predict_proba(input_data)[0]
 
-        # Get predicted category
-        predicted_category = le_target.inverse_transform([prediction])[0]
-        confidence = prediction_proba[prediction] * 100
+    # Get prediction label
+    prediction_label = target_encoder.inverse_transform([prediction])[0]
+    confidence = prediction_proba[prediction] * 100
 
-        # Display Results with Animation
+    # Show balloons for success
+    if prediction_label == 'Yes':
         st.balloons()
 
-        # Result Header
+    # Display result
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if prediction_label == 'Yes':
         st.markdown(f"""
-        <div class="result-card">
-            <h2 style="color: white; margin: 0 0 1rem 0; font-size: 2.5rem;">
-                🎯 Prediction Complete!
-            </h2>
-            <div style="font-size: 3rem; font-weight: 800; margin: 1rem 0;">
-                {predicted_category}
-            </div>
-            <div style="font-size: 1.5rem; opacity: 0.95; margin-top: 1rem;">
-                Confidence: {confidence:.2f}%
-            </div>
+        <div class="result-card-yes">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+            <h2 style="margin: 0 0 1rem 0; font-size: 2.5rem; font-weight: 800;">YES - Likely to Buy Again!</h2>
+            <p style="font-size: 1.2rem; margin: 0.5rem 0; opacity: 0.95;">
+                This customer shows strong indicators of repeat purchase behavior
+            </p>
+            <div style="font-size: 3rem; font-weight: 800; margin: 1rem 0;">{confidence:.1f}%</div>
+            <p style="font-size: 1rem; margin: 0; opacity: 0.9;">Confidence Score</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # Detailed Results
-        st.markdown("---")
-
-        # Results Metrics
-        res_col1, res_col2, res_col3 = st.columns(3)
-
-        with res_col1:
-            st.metric(
-                label="🎯 Predicted Category",
-                value=predicted_category,
-                delta="AI Prediction"
-            )
-
-        with res_col2:
-            st.metric(
-                label="📈 Confidence Score",
-                value=f"{confidence:.2f}%",
-                delta="Model Certainty"
-            )
-
-        with res_col3:
-            reliability = "High" if confidence >= 80 else ("Medium" if confidence >= 60 else "Low")
-            st.metric(
-                label="🎲 Reliability",
-                value=reliability,
-                delta=f"Based on {confidence:.0f}%"
-            )
-
-        # Probability Distribution
+        # Insights
         st.markdown("""
-        <div class="section-header-pred">
-            <span class="icon">📊</span>
-            <h2>Probability Distribution</h2>
+        <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);">
+            <h3 style="color: #28a745; margin-top: 0;">💡 Business Insights</h3>
+            <ul style="color: #495057; line-height: 2;">
+                <li><strong>High retention potential</strong> - Consider loyalty programs</li>
+                <li><strong>Target for upselling</strong> - Recommend premium products</li>
+                <li><strong>Email marketing</strong> - Send personalized offers</li>
+                <li><strong>Request reviews</strong> - Leverage positive sentiment</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
 
-        categories = le_target.classes_
-        probabilities = prediction_proba * 100
+    else:
+        st.markdown(f"""
+        <div class="result-card-no">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h2 style="margin: 0 0 1rem 0; font-size: 2.5rem; font-weight: 800;">NO - May Not Return</h2>
+            <p style="font-size: 1.2rem; margin: 0.5rem 0; opacity: 0.95;">
+                This customer shows low indicators of repeat purchase behavior
+            </p>
+            <div style="font-size: 3rem; font-weight: 800; margin: 1rem 0;">{confidence:.1f}%</div>
+            <p style="font-size: 1rem; margin: 0; opacity: 0.9;">Confidence Score</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Create enhanced bar chart
-        fig_proba = go.Figure(data=[
-            go.Bar(
-                x=categories,
-                y=probabilities,
-                marker_color=['#DD0303' if i == prediction else '#FA812F' for i in range(len(categories))],
-                text=[f"{p:.2f}%" for p in probabilities],
-                textposition='outside',
-                marker=dict(
-                    line=dict(color='white', width=2)
-                )
-            )
-        ])
+        # Insights
+        st.markdown("""
+        <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);">
+            <h3 style="color: #dc3545; margin-top: 0;">💡 Retention Strategies</h3>
+            <ul style="color: #495057; line-height: 2;">
+                <li><strong>Win-back campaign</strong> - Send special discount offers</li>
+                <li><strong>Feedback request</strong> - Understand dissatisfaction</li>
+                <li><strong>Product recommendations</strong> - Suggest alternatives</li>
+                <li><strong>Customer service</strong> - Proactive support outreach</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
-        fig_proba.update_layout(
-            title="Prediction Confidence Across All Categories",
-            xaxis_title="Product Category",
-            yaxis_title="Probability (%)",
-            showlegend=False,
-            height=450,
-            font=dict(family="Inter", color="#2C3E50"),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='#F8F9FA',
-            xaxis=dict(gridcolor='#E9ECEF'),
-            yaxis=dict(gridcolor='#E9ECEF')
+    # Detailed Probability Breakdown
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="section-header-custom">
+        <span>📊</span>
+        <h2>Prediction Breakdown</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_yes, col_no = st.columns(2)
+
+    with col_yes:
+        yes_prob = prediction_proba[1] * 100 if len(prediction_proba) > 1 else 0
+        st.metric(
+            label="💚 Probability: Will Buy Again (Yes)",
+            value=f"{yes_prob:.1f}%",
+            delta="High Confidence" if yes_prob >= 70 else ("Medium" if yes_prob >= 50 else "Low")
         )
 
-        st.plotly_chart(fig_proba, use_container_width=True)
+    with col_no:
+        no_prob = prediction_proba[0] * 100 if len(prediction_proba) > 0 else 0
+        st.metric(
+            label="❌ Probability: Won't Buy Again (No)",
+            value=f"{no_prob:.1f}%",
+            delta="High Risk" if no_prob >= 70 else ("Medium" if no_prob >= 50 else "Low"),
+            delta_color="inverse"
+        )
 
-        # Input Summary
-        st.markdown("---")
+# Model Information Section
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("""
+<div class="section-header-custom">
+    <span>🤖</span>
+    <h2>Model Information</h2>
+</div>
+""", unsafe_allow_html=True)
 
-        st.markdown("""
-        <div class="section-header-pred">
-            <span class="icon">📝</span>
-            <h2>Input Summary</h2>
-        </div>
-        """, unsafe_allow_html=True)
+col_m1, col_m2, col_m3 = st.columns(3)
 
-        summary_col1, summary_col2 = st.columns(2)
+with col_m1:
+    st.markdown("""
+    <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #FA812F;">97.82%</div>
+        <p style="color: #6C757D; margin: 0.5rem 0 0 0;">Model Accuracy</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with summary_col1:
-            st.markdown("""
-            <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #E9ECEF;">
-                <h4 style="color: #2C3E50; margin-top: 0;">Customer Details</h4>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown(f"**Gender:** {gender}")
-            st.markdown(f"**Age:** {age} years")
-            st.markdown(f"**Review Rating:** {review_rating:.1f} ⭐")
+with col_m2:
+    st.markdown("""
+    <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #FA812F;">10</div>
+        <p style="color: #6C757D; margin: 0.5rem 0 0 0;">Features Used</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with summary_col2:
-            st.markdown("""
-            <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #E9ECEF;">
-                <h4 style="color: #2C3E50; margin-top: 0;">Product Details</h4>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown(f"**Item:** {item_purchased}")
-            st.markdown(f"**Color:** {color}")
-            st.markdown(f"**Size:** {size}")
-            st.markdown(f"**Price:** ${purchase_amount}")
-
-    except Exception as e:
-        st.error(f"⚠️ Error during prediction: {e}")
-
-st.markdown("---")
+with col_m3:
+    st.markdown("""
+    <div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05); text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 700; color: #FA812F;">200</div>
+        <p style="color: #6C757D; margin: 0.5rem 0 0 0;">Decision Trees</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Feature Importance
+st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("""
-<div class="section-header-pred">
-    <span class="icon">🎯</span>
-    <h2>Feature Importance Analysis</h2>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div style="background: linear-gradient(135deg, #FEF3E2 0%, #ffffff 100%); padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
-    <p style="margin: 0; color: #2C3E50;">
-        This chart shows which features have the most influence on the model's predictions. Higher importance means the feature plays a larger role in determining the category.
+<div style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);">
+    <h3 style="color: #2C3E50; margin-top: 0;">🎯 Top 5 Most Important Features</h3>
+    <ol style="color: #495057; line-height: 2; font-size: 1rem;">
+        <li><strong>Purchase Amount (USD)</strong> - 23.41% importance</li>
+        <li><strong>Age</strong> - 21.69% importance</li>
+        <li><strong>Review Rating</strong> - 16.79% importance</li>
+        <li><strong>Shipping Type</strong> - 10.25% importance</li>
+        <li><strong>Season</strong> - 7.42% importance</li>
+    </ol>
+    <p style="color: #6C757D; margin: 1rem 0 0 0; font-size: 0.9rem;">
+        <em>These features have the strongest influence on predicting repeat purchase behavior.</em>
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# Get feature importance from model
-feature_names = ['Item Purchased', 'Color', 'Size', 'Gender', 'Age', 'Purchase Amount', 'Review Rating']
-feature_importance = model.feature_importances_
-
-# Create dataframe
-importance_df = pd.DataFrame({
-    'Feature': feature_names,
-    'Importance': feature_importance
-}).sort_values('Importance', ascending=True)  # Sort for horizontal bar
-
-# Enhanced importance chart
-fig_importance = go.Figure(data=[
-    go.Bar(
-        x=importance_df['Importance'],
-        y=importance_df['Feature'],
-        orientation='h',
-        marker=dict(
-            color=importance_df['Importance'],
-            colorscale=[[0, '#FEF3E2'], [0.5, '#FAB12F'], [0.75, '#FA812F'], [1, '#DD0303']],
-            line=dict(color='white', width=1.5)
-        ),
-        text=[f"{val:.3f}" for val in importance_df['Importance']],
-        textposition='outside'
-    )
-])
-
-fig_importance.update_layout(
-    title="Feature Impact on Category Predictions",
-    xaxis_title="Importance Score",
-    yaxis_title="",
-    showlegend=False,
-    height=450,
-    font=dict(family="Inter", color="#2C3E50"),
-    paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='#F8F9FA',
-    xaxis=dict(gridcolor='#E9ECEF'),
-    yaxis=dict(gridcolor='#E9ECEF')
-)
-
-st.plotly_chart(fig_importance, use_container_width=True)
-
-st.markdown("---")
-
-# Batch Prediction
+# Batch Prediction Section
+st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("""
-<div class="section-header-pred">
-    <span class="icon">📦</span>
-    <h2>Batch Predictions</h2>
+<div class="section-header-custom">
+    <span>📤</span>
+    <h2>Batch Prediction</h2>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("""
-<div style="background: linear-gradient(135deg, #FEF3E2 0%, #ffffff 100%); padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #FA812F; margin-bottom: 2rem;">
-    <h4 style="color: #2C3E50; margin-top: 0;">Upload CSV for Bulk Predictions</h4>
-    <p style="margin: 0; color: #495057;">
-        Upload a CSV file containing multiple rows of customer and product data. The model will generate predictions for all rows simultaneously.
+<div style="background: linear-gradient(135deg, #FEF3E2 0%, #ffffff 100%); padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #FA812F; margin-bottom: 1.5rem;">
+    <p style="color: #495057; margin: 0; line-height: 1.6;">
+        Upload a CSV file with multiple customer records to get predictions in bulk.
+        The file should contain columns: <code>Age, Gender, Category, Season, Review Rating, Size, Shipping Type, Purchase Amount (USD), Discount Applied, Promo Code Used</code>
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader(
-    "📎 Choose a CSV file",
-    type="csv",
-    help="Upload a CSV with columns: Item Purchased, Color, Size, Gender, Age, Purchase Amount (USD), Review Rating"
-)
+uploaded_file = st.file_uploader("📁 Upload CSV File", type=['csv'], help="Upload a CSV file with customer data")
 
 if uploaded_file is not None:
     try:
         # Read uploaded file
         batch_df = pd.read_csv(uploaded_file)
 
-        st.success(f"✅ File loaded successfully! {len(batch_df)} rows detected.")
+        st.success(f"✅ File uploaded successfully! Found {len(batch_df)} records.")
 
-        with st.expander("👁️ Preview Uploaded Data", expanded=True):
+        # Show preview
+        with st.expander("👁️ Preview Data", expanded=True):
             st.dataframe(batch_df.head(10), use_container_width=True)
 
-        if st.button("🔮 Run Batch Predictions", type="primary", use_container_width=True):
+        if st.button("🚀 Run Batch Predictions", use_container_width=True):
             # Prepare data
-            required_features = ['Item Purchased', 'Color', 'Size', 'Gender', 'Age', 'Purchase Amount (USD)', 'Review Rating']
+            batch_input = batch_df.copy()
 
-            # Check if all required features are present
-            missing_features = set(required_features) - set(batch_df.columns)
-            if missing_features:
-                st.error(f"⚠️ Missing required columns: {', '.join(missing_features)}")
-            else:
-                with st.spinner('🔄 Processing predictions...'):
-                    # Encode categorical features
-                    batch_encoded = batch_df.copy()
-                    for feature in ['Item Purchased', 'Color', 'Size', 'Gender']:
-                        if feature in label_encoders:
-                            le = label_encoders[feature]
-                            # Handle unseen labels
-                            batch_encoded[feature] = batch_encoded[feature].apply(
-                                lambda x: le.transform([x])[0] if x in le.classes_ else le.transform([le.classes_[0]])[0]
-                            )
+            # Encode categorical features
+            for col in batch_input.select_dtypes(include=['object']).columns:
+                if col in label_encoders:
+                    batch_input[col] = label_encoders[col].transform(batch_input[col])
 
-                    # Make predictions
-                    predictions = model.predict(batch_encoded[required_features])
-                    predicted_categories = le_target.inverse_transform(predictions)
+            # Make predictions
+            with st.spinner("🔮 Generating predictions..."):
+                predictions = model.predict(batch_input)
+                predictions_proba = model.predict_proba(batch_input)
 
-                    # Add predictions to dataframe
-                    result_df = batch_df.copy()
-                    result_df['Predicted_Category'] = predicted_categories
+                # Add results to original dataframe
+                batch_df['Prediction'] = target_encoder.inverse_transform(predictions)
+                batch_df['Confidence'] = [proba[pred] * 100 for pred, proba in zip(predictions, predictions_proba)]
+                batch_df['Will_Buy_Again_Probability'] = predictions_proba[:, 1] * 100
 
-                    st.success(f"✅ Batch predictions complete! {len(result_df)} rows processed.")
+            st.success("✅ Predictions complete!")
 
-                    # Show results
-                    st.markdown("#### 📊 Prediction Results")
-                    st.dataframe(result_df, use_container_width=True, height=400)
+            # Summary metrics
+            col_b1, col_b2, col_b3 = st.columns(3)
 
-                    # Category distribution
-                    category_dist = result_df['Predicted_Category'].value_counts()
-                    fig_batch = px.pie(
-                        values=category_dist.values,
-                        names=category_dist.index,
-                        title="Distribution of Predicted Categories",
-                        color_discrete_sequence=["#FA812F", "#FAB12F", "#DD0303", "#FEF3E2"],
-                        hole=0.4
-                    )
-                    fig_batch.update_layout(
-                        height=350,
-                        font=dict(family="Inter", color="#2C3E50")
-                    )
-                    st.plotly_chart(fig_batch, use_container_width=True)
+            with col_b1:
+                yes_count = (batch_df['Prediction'] == 'Yes').sum()
+                st.metric("💚 Will Buy Again", f"{yes_count}", f"{yes_count/len(batch_df)*100:.1f}%")
 
-                    # Download button
-                    st.download_button(
-                        label="📥 Download Results (CSV)",
-                        data=result_df.to_csv(index=False),
-                        file_name="shopbis_batch_predictions.csv",
-                        mime="text/csv",
-                        use_container_width=True
-                    )
+            with col_b2:
+                no_count = (batch_df['Prediction'] == 'No').sum()
+                st.metric("❌ Won't Buy Again", f"{no_count}", f"{no_count/len(batch_df)*100:.1f}%")
+
+            with col_b3:
+                avg_confidence = batch_df['Confidence'].mean()
+                st.metric("📊 Avg Confidence", f"{avg_confidence:.1f}%")
+
+            # Show results
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.subheader("📋 Prediction Results")
+            st.dataframe(batch_df, use_container_width=True)
+
+            # Download results
+            csv = batch_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Results (CSV)",
+                data=csv,
+                file_name="purchase_behavior_predictions.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
 
     except Exception as e:
-        st.error(f"⚠️ Error processing file: {e}")
-
-st.markdown("---")
-
-# Model Information
-with st.expander("ℹ️ About the Prediction Model", expanded=False):
-    st.markdown("""
-    ### 🤖 Random Forest Classifier
-
-    **Training Data**: 3,900 customer purchase records
-
-    **Input Features** (7 total):
-    - 📦 **Item Purchased**: Product name
-    - 🎨 **Color**: Product color
-    - 📏 **Size**: Product size (S, M, L, XL)
-    - 👤 **Gender**: Customer gender
-    - 🎂 **Age**: Customer age in years
-    - 💰 **Purchase Amount**: Transaction amount in USD
-    - ⭐ **Review Rating**: Customer rating (1-5 stars)
-
-    **Output**: Product **Category** prediction
-    - Clothing
-    - Footwear
-    - Accessories
-    - Outerwear
-
-    **Model Performance**:
-    - Accuracy: ~99%
-    - Algorithm: Random Forest (Ensemble of 200 decision trees)
-    - Training Method: Supervised learning with label encoding
-
-    ### 📚 How to Use
-
-    **Single Prediction:**
-    1. Fill in customer and product information
-    2. Click "Generate Prediction"
-    3. View predicted category and confidence score
-
-    **Batch Prediction:**
-    1. Prepare CSV with required columns
-    2. Upload file using the file uploader
-    3. Click "Run Batch Predictions"
-    4. Download results with predictions
-
-    ### 🎯 Interpreting Results
-
-    - **Predicted Category**: Most likely product category
-    - **Confidence**: Model certainty (higher = more confident)
-    - **Probability Distribution**: Shows likelihood for all categories
-    - **Feature Importance**: Which inputs most influence predictions
-    """)
+        st.error(f"❌ Error processing file: {e}")
 
 # Footer
+st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("""
-<div style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, #2C3E50 0%, #1a252f 100%); border-radius: 1rem; text-align: center; color: white;">
-    <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
-        Powered by Random Forest ML Algorithm | Scikit-learn & Streamlit
+<div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #1a252f 0%, #2C3E50 100%); border-radius: 0.75rem; color: white;">
+    <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0;">
+        <strong>ShopBis Purchase Behavior Prediction</strong> | Powered by Random Forest ML (97.82% Accuracy)
     </p>
-    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #FAB12F; font-weight: 600;">
+    <p style="color: #FAB12F; font-size: 0.9rem; margin-top: 0.5rem; font-weight: 600;">
         Developed by Kent Paulo Delgado
     </p>
 </div>
