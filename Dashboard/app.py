@@ -27,10 +27,20 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* Hide Streamlit Branding */
+    /* Hide Streamlit Branding and Header */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    header {visibility: hidden !important;}
+
+    /* Hide Streamlit's default header toolbar */
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    /* Hide the top decoration bar */
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
 
     /* Professional Cool-Toned Background */
     .stApp {
@@ -46,6 +56,11 @@ st.markdown("""
     /* Remove top padding from app */
     section[data-testid="stAppViewContainer"] > .main {
         padding-top: 0 !important;
+    }
+
+    /* Remove top app container padding */
+    .stApp > header {
+        display: none !important;
     }
 
     /* Main Header - Professional */
@@ -416,6 +431,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Add spacer at the very top
+st.markdown("""
+<div style="height: 1.5rem; background: #F8F9FA;"></div>
+""", unsafe_allow_html=True)
+
 # Top Navigation Bar
 st.markdown("""
 <div class="top-nav">
@@ -442,13 +462,15 @@ st.markdown("""
 
 # Hero Section with Animated Header
 st.markdown("""
-<div style="text-align: center; padding: 7rem 0 2rem 0;">
-    <h1 style="font-size: 3.5rem; font-weight: 800; color: #2C3E50; margin-bottom: 1rem; letter-spacing: -1px;">
-        ShopBis Analytics Dashboard
-    </h1>
-    <p style="font-size: 1.2rem; color: #6C757D; max-width: 800px; margin: 0 auto 2rem auto; line-height: 1.8;">
-        Comprehensive Shopping Behavior Analysis & Insights Platform
-    </p>
+<div style="background: white; padding: 2.5rem 2rem; margin: 1rem -2rem 2rem -2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+    <div style="text-align: center;">
+        <h1 style="font-size: 3.5rem; font-weight: 800; color: #2C3E50; margin-bottom: 1rem; letter-spacing: -1px;">
+            ShopBis Analytics Dashboard
+        </h1>
+        <p style="font-size: 1.2rem; color: #6C757D; max-width: 800px; margin: 0 auto; line-height: 1.8;">
+            Comprehensive Shopping Behavior Analysis & Insights Platform
+        </p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 

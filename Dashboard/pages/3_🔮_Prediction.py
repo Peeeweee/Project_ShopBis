@@ -29,6 +29,32 @@ if professional_css.exists():
 # Additional page-specific styles
 st.markdown("""
 <style>
+    /* Hide Streamlit Branding and Header */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden !important;}
+
+    /* Hide Streamlit's default header toolbar */
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    /* Hide the top decoration bar */
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+
+    /* Remove default Streamlit padding */
+    .main .block-container {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    /* Remove top app container padding */
+    .stApp > header {
+        display: none !important;
+    }
+
     /* Prediction Card */
     .prediction-card {
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -84,6 +110,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Add spacer at the very top
+st.markdown("""
+<div style="height: 1.5rem; background: #F8F9FA;"></div>
+""", unsafe_allow_html=True)
+
 # Top Navigation
 st.markdown("""
 <div class="top-nav">
@@ -110,13 +141,15 @@ st.markdown("""
 
 # Hero Section
 st.markdown("""
-<div style="text-align: center; padding: 6.5rem 0 1.5rem 0;">
-    <h1 style="font-size: 3rem; font-weight: 800; color: #2C3E50; margin-bottom: 0.5rem; letter-spacing: -1px;">
-        🔮 Purchase Behavior Prediction
-    </h1>
-    <p style="font-size: 1.1rem; color: #6C757D; max-width: 700px; margin: 0 auto;">
-        Predict if a customer will make repeat purchases using AI-powered Random Forest model
-    </p>
+<div style="background: white; padding: 2.5rem 2rem; margin: 1rem -2rem 2rem -2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+    <div style="text-align: center;">
+        <h1 style="font-size: 3rem; font-weight: 800; color: #2C3E50; margin-bottom: 0.5rem; letter-spacing: -1px;">
+            🔮 Purchase Behavior Prediction
+        </h1>
+        <p style="font-size: 1.1rem; color: #6C757D; max-width: 700px; margin: 0 auto;">
+            Predict if a customer will make repeat purchases using AI-powered Random Forest model
+        </p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
