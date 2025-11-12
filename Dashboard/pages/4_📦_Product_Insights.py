@@ -24,8 +24,8 @@ else:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         * { font-family: 'Inter', sans-serif; }
         .stApp { background: #F8F9FA; }
-        [data-testid="stSidebar"] { display: none; }
         button[kind="header"] { display: none; }
+        [data-testid="stSidebar"] { display: none; }
         .top-nav { position: sticky; top: 0; z-index: 1000; background: #2C3E50; padding: 0.75rem 2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); margin: -1rem -2rem 2rem -2rem; display: flex; align-items: center; justify-content: space-between; }
         .top-nav-logo { display: flex; align-items: center; gap: 0.75rem; color: white; }
         .top-nav-logo h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
@@ -42,6 +42,8 @@ else:
         .stButton button:hover, .stDownloadButton button:hover { background: #DD0303 !important; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important; }
         h1, h2, h3, h4, h5, h6 { color: #2C3E50 !important; }
         p, div, span { color: #495057; }
+        [data-testid="stExpander"] { background: white; border: 1px solid #E9ECEF; border-radius: 0.75rem; margin-bottom: 2rem; }
+        [data-testid="stExpander"] summary { font-weight: 600; font-size: 1.1rem; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -80,6 +82,148 @@ def load_data():
     return pd.read_csv(data_path)
 
 df = load_data()
+
+# Initialize session state for reset
+if 'reset_filters' not in st.session_state:
+    st.session_state.reset_filters = False
+
+# Filters Section
+st.markdown("## 🔍 Filter Products")
+
+with st.expander("📋 Show Filters", expanded=True):
+    # First row of filters
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        categories = ["All"] + sorted(df["Category"].unique().tolist())
+        selected_category = st.selectbox("📂 Category", categories, index=0, key="category")
+
+    with col2:
+        genders = ["All"] + sorted(df["Gender"].unique().tolist())
+        selected_gender = st.selectbox("👤 Gender", genders, index=0, key="gender")
+
+    with col3:
+        seasons = ["All"] + sorted(df["Season"].unique().tolist())
+        selected_season = st.selectbox("🌤️ Season", seasons, index=0, key="season")
+
+    with col4:
+        locations = ["All"] + sorted(df["Location"].unique().tolist())
+        selected_location = st.selectbox("📍 Location", locations, index=0, key="location")
+
+    # Second row of filters
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        discount_options = ["All", "Yes", "No"]
+        selected_discount = st.selectbox("🏷️ Discount Applied", discount_options, index=0, key="discount")
+
+    with col2:
+        promo_options = ["All", "Yes", "No"]
+        selected_promo = st.selectbox("🎟️ Promo Code Used", promo_options, index=0, key="promo")
+
+    with col3:
+        rating_min = st.slider(
+            "⭐ Minimum Rating",
+            min_value=1.0,
+            max_value=5.0,
+            value=1.0,
+            step=0.5,
+            key="rating"
+        )
+
+    # Third row - Range sliders
+    col1, col2 = st.columns(2)
+
+    with col1:
+        age_min, age_max = st.slider(
+            "🎂 Age Range",
+            min_value=int(df["Age"].min()),
+            max_value=int(df["Age"].max()),
+            value=(int(df["Age"].min()), int(df["Age"].max())),
+            key="age_range"
+        )
+
+    with col2:
+        amount_min, amount_max = st.slider(
+            "💰 Purchase Amount (USD)",
+            min_value=float(df["Purchase Amount (USD)"].min()),
+            max_value=float(df["Purchase Amount (USD)"].max()),
+            value=(float(df["Purchase Amount (USD)"].min()), float(df["Purchase Amount (USD)"].max())),
+            format="$%.0f",
+            key="amount_range"
+        )
+
+    # Reset button - More prominent
+    st.markdown("---")
+    col1, col2, col3 = st.columns([2, 2, 2])
+    with col1:
+        if st.button("🔄 Reset All Filters", type="primary", use_container_width=True):
+            # Clear all session state keys
+            for key in ['category', 'gender', 'season', 'location', 'discount', 'promo', 'rating', 'age_range', 'amount_range']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
+
+# Apply filters
+df_filtered = df.copy()
+
+if selected_category != "All":
+    df_filtered = df_filtered[df_filtered["Category"] == selected_category]
+
+if selected_gender != "All":
+    df_filtered = df_filtered[df_filtered["Gender"] == selected_gender]
+
+if selected_season != "All":
+    df_filtered = df_filtered[df_filtered["Season"] == selected_season]
+
+if selected_location != "All":
+    df_filtered = df_filtered[df_filtered["Location"] == selected_location]
+
+df_filtered = df_filtered[
+    (df_filtered["Age"] >= age_min) &
+    (df_filtered["Age"] <= age_max)
+]
+
+df_filtered = df_filtered[
+    (df_filtered["Purchase Amount (USD)"] >= amount_min) &
+    (df_filtered["Purchase Amount (USD)"] <= amount_max)
+]
+
+df_filtered = df_filtered[df_filtered["Review Rating"] >= rating_min]
+
+if selected_discount != "All":
+    df_filtered = df_filtered[df_filtered["Discount Applied"] == selected_discount]
+
+if selected_promo != "All":
+    df_filtered = df_filtered[df_filtered["Promo Code Used"] == selected_promo]
+
+# Show active filters banner
+original_count = load_data().shape[0]
+filters_active = []
+if selected_category != "All":
+    filters_active.append(f"Category: {selected_category}")
+if selected_gender != "All":
+    filters_active.append(f"Gender: {selected_gender}")
+if selected_season != "All":
+    filters_active.append(f"Season: {selected_season}")
+if selected_location != "All":
+    filters_active.append(f"Location: {selected_location}")
+if age_min != int(load_data()["Age"].min()) or age_max != int(load_data()["Age"].max()):
+    filters_active.append(f"Age: {age_min}-{age_max}")
+if amount_min != float(load_data()["Purchase Amount (USD)"].min()) or amount_max != float(load_data()["Purchase Amount (USD)"].max()):
+    filters_active.append(f"Amount: ${amount_min:.0f}-${amount_max:.0f}")
+if rating_min > 1.0:
+    filters_active.append(f"Rating: ≥{rating_min}⭐")
+if selected_discount != "All":
+    filters_active.append(f"Discount: {selected_discount}")
+if selected_promo != "All":
+    filters_active.append(f"Promo: {selected_promo}")
+
+if filters_active:
+    st.info(f"🔍 **Active Filters:** {' • '.join(filters_active)} | **Showing {len(df_filtered):,} / {original_count:,} records ({len(df_filtered)/original_count*100:.1f}%)**")
+
+# Use filtered data for all subsequent analyses
+df = df_filtered
 
 st.markdown("---")
 
